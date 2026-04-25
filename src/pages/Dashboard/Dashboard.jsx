@@ -1,18 +1,13 @@
-
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
-  MdPeople,
-  MdPersonAdd,
-  MdWork,
-  MdAccessTime,
-  MdCheckCircle,
-  MdCancel,
-  MdSchedule,
-  MdTrendingUp,
-  MdCalendarToday,
-  MdFilterList,
+  MdPeople, MdPersonAdd, MdWork, MdAccessTime,
+  MdCheckCircle, MdCancel, MdSchedule, MdTrendingUp,
+  MdCalendarToday, MdFilterList, MdArrowForward,
 } from "react-icons/md";
+
+/* ── Shared sub-components ─────────────────────────────────────────── */
 
 const StatCard = ({ title, value, subtitle, icon, color, bg }) => (
   <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-start justify-between">
@@ -47,13 +42,23 @@ const Badge = ({ status }) => {
   );
 };
 
+/* ─────────────────────────────────────────────────────────────────── */
+
 const Dashboard = () => {
-  const { employees } = useSelector((state) => state.employees);
-  const { candidates } = useSelector((state) => state.recruitment);
-  const { records } = useSelector((state) => state.attendance);
+  const navigate = useNavigate();
+  const { employees } = useSelector((s) => s.employees);
+  const { candidates } = useSelector((s) => s.recruitment);
+  const { records } = useSelector((s) => s.attendance);
+  const { currentUser } = useSelector((s) => s.auth);
+
+  const role = currentUser?.role; // "Admin" | "HR Staff" | "Management"
+  const isAdmin    = role === "Admin";
+  const isHR       = role === "HR Staff";
+  const isMgmt     = role === "Management";
+  // Both Admin and HR Staff can manage; Management is view-only (FRS §6)
+  const canManage  = isAdmin || isHR;
 
   const [timePeriod, setTimePeriod] = useState("daily");
-
   const today = new Date().toISOString().split("T")[0];
 
   const getMonthStart = () => {
@@ -61,86 +66,146 @@ const Dashboard = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
   };
 
+  /* Attendance filtered by selected period (FRS §2.2 Data Filtering) */
   const filteredAttendance = useMemo(() => {
-    if (timePeriod === "daily") {
-      return records.filter((r) => r.date === today);
-    }
+    if (timePeriod === "daily") return records.filter((r) => r.date === today);
     const monthStart = getMonthStart();
     return records.filter((r) => r.date >= monthStart && r.date <= today);
   }, [records, timePeriod, today]);
 
-  // Employee summary (not filtered by period — always total)
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter((e) => e.status === "Active").length;
+  /* ── Employee summary (FRS §2.2) ── */
+  const totalEmployees    = employees.length;
+  const activeEmployees   = employees.filter((e) => e.status === "Active").length;
   const inactiveEmployees = employees.filter((e) => e.status === "Inactive").length;
 
-  // Recruitment summary (always total)
+  /* ── Recruitment summary (FRS §2.2) ── */
   const totalCandidates = candidates.length;
-  const shortlisted = candidates.filter((c) => c.status === "Shortlisted").length;
-  const selected = candidates.filter((c) => c.status === "Selected").length;
+  const shortlisted     = candidates.filter((c) => c.status === "Shortlisted").length;
+  const selected        = candidates.filter((c) => c.status === "Selected").length;
 
-  // Attendance summary filtered by period
+  /* ── Attendance summary (FRS §2.2) ── */
   const presentCount = filteredAttendance.filter((r) => r.status === "Present").length;
-  const absentCount = filteredAttendance.filter((r) => r.status === "Absent").length;
-  const lateCount = filteredAttendance.filter((r) => r.status === "Late").length;
-  const totalHours = filteredAttendance.reduce((sum, r) => sum + r.totalHours, 0);
+  const absentCount  = filteredAttendance.filter((r) => r.status === "Absent").length;
+  const lateCount    = filteredAttendance.filter((r) => r.status === "Late").length;
+  const totalHours   = filteredAttendance.reduce((sum, r) => sum + r.totalHours, 0);
 
-  // Activity feeds
-  const recentEmployees = [...employees].slice(-3).reverse();
+  /* ── Activity feeds (FRS §2.2 Activity Overview) ── */
+  const recentEmployees  = [...employees].slice(-3).reverse();
   const recentCandidates = [...candidates].slice(-3).reverse();
   const recentAttendance = [...records]
-    .sort((a, b) => (b.date + b.checkIn) > (a.date + a.checkIn) ? 1 : -1)
+    .sort((a, b) => ((b.date + b.checkIn) > (a.date + a.checkIn) ? 1 : -1))
     .slice(0, 4);
+
+  /* ── Navigation quick-links (FRS §2.2 Navigation Support) ── */
+  const navCards = [
+    {
+      label: "Employee Management",
+      desc: canManage ? "Add, edit and manage employee records" : "View employee records and summaries",
+      icon: <MdPeople size={24} />,
+      path: "/employees",
+      color: "#22c55e",
+      bg: "#dcfce7",
+    },
+    {
+      label: "Recruitment Management",
+      desc: canManage ? "Track candidates through the hiring pipeline" : "Monitor recruitment data and pipeline",
+      icon: <MdWork size={24} />,
+      path: "/recruitment",
+      color: "#7c3aed",
+      bg: "#ede9fe",
+    },
+    {
+      label: "Attendance Management",
+      desc: canManage ? "Mark and manage employee attendance" : "View attendance reports and records",
+      icon: <MdAccessTime size={24} />,
+      path: "/attendance",
+      color: "#2563eb",
+      bg: "#dbeafe",
+    },
+  ];
 
   return (
     <div className="space-y-6">
 
-      {/* ── Welcome Banner ── */}
+      {/* ── Welcome Banner + Period Filter ── */}
       <div
         className="rounded-xl p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         style={{ background: "linear-gradient(135deg, #1E1E1E 0%, #2d2d2d 100%)" }}
       >
         <div>
-          <h2 className="text-2xl font-bold">Welcome back!</h2>
+          <h2 className="text-2xl font-bold">
+            Welcome back, {currentUser?.name?.split(" ")[0]}
+          </h2>
           <p className="mt-1 text-sm" style={{ color: "#22c55e" }}>
             {new Date().toLocaleDateString("en-US", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
           </p>
+          {/* Role badge */}
+          <span
+            className="mt-2 inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full"
+            style={{
+              backgroundColor: isAdmin ? "#22c55e" : isHR ? "#3b82f6" : "#a855f7",
+              color: "#fff",
+            }}
+          >
+            {role}
+          </span>
         </div>
 
-        {/* Time Period Filter (FRS 2.2 - Data Filtering) */}
-        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+        {/* Time Period Filter — FRS §2.2 Data Filtering */}
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 self-start sm:self-auto">
           <MdFilterList size={16} className="text-gray-300" />
           <span className="text-xs text-gray-300 font-medium">View:</span>
           <div className="flex rounded-md overflow-hidden border border-white/20">
-            <button
-              onClick={() => setTimePeriod("daily")}
-              className={`px-3 py-1 text-xs font-semibold transition-colors ${
-                timePeriod === "daily"
-                  ? "text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-              style={timePeriod === "daily" ? { backgroundColor: "#22c55e" } : {}}
-            >
-              Daily
-            </button>
-            <button
-              onClick={() => setTimePeriod("monthly")}
-              className={`px-3 py-1 text-xs font-semibold transition-colors ${
-                timePeriod === "monthly"
-                  ? "text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-              style={timePeriod === "monthly" ? { backgroundColor: "#22c55e" } : {}}
-            >
-              Monthly
-            </button>
+            {["daily", "monthly"].map((p) => (
+              <button
+                key={p}
+                onClick={() => setTimePeriod(p)}
+                className={`px-3 py-1 text-xs font-semibold capitalize transition-colors ${
+                  timePeriod === p ? "text-white" : "text-gray-400 hover:text-white"
+                }`}
+                style={timePeriod === p ? { backgroundColor: "#22c55e" } : {}}
+              >
+                {p === "daily" ? "Daily" : "Monthly"}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ── Employee Summary Cards ── */}
+      {/* ── Navigation Support (FRS §2.2) ── */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Quick Navigation
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {navCards.map((card) => (
+            <button
+              key={card.path}
+              onClick={() => navigate(card.path)}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 text-left hover:shadow-md transition-shadow group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div
+                  className="p-2.5 rounded-xl"
+                  style={{ backgroundColor: card.bg, color: card.color }}
+                >
+                  {card.icon}
+                </div>
+                <MdArrowForward
+                  size={18}
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors mt-1"
+                />
+              </div>
+              <p className="text-sm font-semibold text-gray-800">{card.label}</p>
+              <p className="text-xs text-gray-400 mt-1">{card.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Employee Summary (FRS §2.2) — All roles see this ── */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Employee Summary
@@ -173,7 +238,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── Recruitment Summary Cards ── */}
+      {/* ── Recruitment Summary (FRS §2.2) — All roles see this ── */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Recruitment Summary
@@ -206,12 +271,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── Attendance Summary Cards ── */}
+      {/* ── Attendance Summary (FRS §2.2) — All roles see this ── */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
           Attendance Summary
-          <span className="text-xs font-normal text-gray-400 capitalize">
-            ({timePeriod === "daily" ? "Today" : "This Month"})
+          <span className="text-xs font-normal text-gray-400 normal-case">
+            — {timePeriod === "daily" ? "Today" : "This Month"}
           </span>
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -247,102 +312,108 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── Activity Overview (FRS 2.2 - Activity Overview) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ── Activity Overview (FRS §2.2) ── */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Activity Overview
+        </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Recently Added Employees */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <MdPeople style={{ color: "#22c55e" }} size={18} />
-            Recently Added Employees
-          </h3>
-          {recentEmployees.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">No employees yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentEmployees.map((emp) => (
-                <div key={emp.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: "#1E1E1E" }}>
-                      <span className="text-white font-semibold text-sm">
-                        {emp.fullName.charAt(0)}
-                      </span>
+          {/* Recently Added Employees (FRS §2.2 — recently added employees) */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MdPeople style={{ color: "#22c55e" }} size={18} />
+              Recently Added Employees
+            </h4>
+            {recentEmployees.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-6">No employees yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {recentEmployees.map((emp) => (
+                  <div key={emp.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: "#1E1E1E" }}
+                      >
+                        <span className="text-white font-semibold text-sm">{emp.fullName.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{emp.fullName}</p>
+                        <p className="text-xs text-gray-400">{emp.designation} · {emp.department}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{emp.fullName}</p>
-                      <p className="text-xs text-gray-400">{emp.designation} · {emp.department}</p>
-                    </div>
+                    <Badge status={emp.status} />
                   </div>
-                  <Badge status={emp.status} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Recent Recruitment Updates */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <MdWork style={{ color: "#22c55e" }} size={18} />
-            Recent Recruitment Updates
-          </h3>
-          {recentCandidates.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">No candidates yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentCandidates.map((can) => (
-                <div key={can.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: "#1E1E1E" }}>
-                      <span className="text-white font-semibold text-sm">
-                        {can.candidateName.charAt(0)}
-                      </span>
+          {/* Recent Recruitment Updates (FRS §2.2 — recent recruitment updates) */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MdWork style={{ color: "#22c55e" }} size={18} />
+              Recent Recruitment Updates
+            </h4>
+            {recentCandidates.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-6">No candidates yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {recentCandidates.map((can) => (
+                  <div key={can.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: "#1E1E1E" }}
+                      >
+                        <span className="text-white font-semibold text-sm">{can.candidateName.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{can.candidateName}</p>
+                        <p className="text-xs text-gray-400">{can.appliedPosition} · {can.applicationDate}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{can.candidateName}</p>
-                      <p className="text-xs text-gray-400">{can.appliedPosition} · {can.applicationDate}</p>
-                    </div>
+                    <Badge status={can.status} />
                   </div>
-                  <Badge status={can.status} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Recent Attendance Records */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <MdCalendarToday style={{ color: "#22c55e" }} size={18} />
-            Recent Attendance Records
-          </h3>
-          {recentAttendance.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">No attendance records yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {recentAttendance.map((rec) => (
-                <div key={rec.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: "#1E1E1E" }}>
-                      <span className="text-white font-semibold text-sm">
-                        {rec.employeeName.charAt(0)}
-                      </span>
+          {/* Recent Attendance Records (FRS §2.2 — recent attendance records) */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MdCalendarToday style={{ color: "#22c55e" }} size={18} />
+              Recent Attendance Records
+            </h4>
+            {recentAttendance.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-6">No attendance records yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {recentAttendance.map((rec) => (
+                  <div key={rec.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: "#1E1E1E" }}
+                      >
+                        <span className="text-white font-semibold text-sm">{rec.employeeName.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{rec.employeeName}</p>
+                        <p className="text-xs text-gray-400">
+                          {rec.date}{rec.checkIn ? ` · In: ${rec.checkIn}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{rec.employeeName}</p>
-                      <p className="text-xs text-gray-400">
-                        {rec.date} {rec.checkIn ? `· In: ${rec.checkIn}` : ""}
-                      </p>
-                    </div>
+                    <Badge status={rec.status} />
                   </div>
-                  <Badge status={rec.status} />
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 

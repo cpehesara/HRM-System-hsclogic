@@ -55,6 +55,13 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
     if (!form.employeeId) newErrors.employeeId = "Employee is required";
     if (!form.date) newErrors.date = "Date is required";
     if (!form.status) newErrors.status = "Status is required";
+    if (form.checkIn && form.checkOut) {
+      const [inH, inM] = form.checkIn.split(":").map(Number);
+      const [outH, outM] = form.checkOut.split(":").map(Number);
+      if ((outH * 60 + outM) <= (inH * 60 + inM)) {
+        newErrors.checkOut = "Check-out time must be after check-in time";
+      }
+    }
     return newErrors;
   };
 
@@ -124,8 +131,10 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             name="checkOut"
             value={form.checkOut}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
+              ${errors.checkOut ? "border-red-400" : "border-gray-200"}`}
           />
+          {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>}
         </div>
 
         {/* Status */}
