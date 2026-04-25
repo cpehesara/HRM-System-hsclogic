@@ -4,7 +4,7 @@ import { MdPerson, MdEmail, MdPhone, MdWork, MdCalendarToday, MdDescription, MdN
 
 const Row = ({ icon, label, value }) => (
   <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
-    <div className="text-purple-500 mt-0.5">{icon}</div>
+    <div className="mt-0.5" style={{ color: "#22c55e" }}>{icon}</div>
     <div>
       <p className="text-xs text-gray-400 font-medium">{label}</p>
       <p className="text-sm text-gray-800 font-medium mt-0.5">{value || "—"}</p>
@@ -17,7 +17,8 @@ const CandidateDetail = ({ candidate }) => {
   return (
     <div>
       <div className="flex items-center gap-4 mb-6 pb-5 border-b border-gray-100">
-        <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+          style={{ backgroundColor: "#1E1E1E" }}>
           {candidate.candidateName.charAt(0)}
         </div>
         <div>

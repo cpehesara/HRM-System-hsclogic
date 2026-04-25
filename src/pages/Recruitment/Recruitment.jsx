@@ -11,8 +11,17 @@ import ConfirmDialog from "../../components/common/ConfirmDialog";
 import Badge from "../../components/common/Badge";
 import RecruitmentForm from "./RecruitmentForm";
 import CandidateDetail from "./CandidateDetail";
+import { useToast } from "../../context/ToastContext";
 import { recruitmentStatuses } from "../../data/mockData";
-import { MdAdd, MdEdit, MdVisibility, MdDelete, MdSearch } from "react-icons/md";
+import { MdAdd, MdEdit, MdVisibility, MdDelete, MdSearch, MdWork } from "react-icons/md";
+
+const stageColors = {
+  Applied: { bg: "#f3f4f6", text: "#374151" },
+  Shortlisted: { bg: "#dbeafe", text: "#1d4ed8" },
+  "Interview Scheduled": { bg: "#ede9fe", text: "#7c3aed" },
+  Selected: { bg: "#dcfce7", text: "#15803d" },
+  Rejected: { bg: "#fee2e2", text: "#dc2626" },
+};
 
 const PipelineBar = ({ candidates }) => {
   const counts = recruitmentStatuses.reduce((acc, s) => {
@@ -20,19 +29,14 @@ const PipelineBar = ({ candidates }) => {
     return acc;
   }, {});
 
-  const colors = {
-    Applied: { bg: "#f3f4f6", text: "#374151" },
-    Shortlisted: { bg: "#dbeafe", text: "#1d4ed8" },
-    "Interview Scheduled": { bg: "#ede9fe", text: "#7c3aed" },
-    Selected: { bg: "#dcfce7", text: "#15803d" },
-    Rejected: { bg: "#fee2e2", text: "#dc2626" },
-  };
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
       {recruitmentStatuses.map((s) => (
-        <div key={s} className="rounded-xl p-4 text-center"
-          style={{ backgroundColor: colors[s].bg, color: colors[s].text }}>
+        <div
+          key={s}
+          className="rounded-xl p-4 text-center"
+          style={{ backgroundColor: stageColors[s].bg, color: stageColors[s].text }}
+        >
           <p className="text-2xl font-bold">{counts[s]}</p>
           <p className="text-xs font-medium mt-1">{s}</p>
         </div>
@@ -43,6 +47,7 @@ const PipelineBar = ({ candidates }) => {
 
 const Recruitment = () => {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { candidates } = useSelector((state) => state.recruitment);
   const { currentUser } = useSelector((state) => state.auth);
 
@@ -76,15 +81,24 @@ const Recruitment = () => {
   const handleAdd = (formData) => {
     dispatch(addCandidate({ ...formData, id: generateId() }));
     setShowAddModal(false);
+    toast.success(`${formData.candidateName} has been added to the pipeline.`, "Candidate Added");
   };
 
   const handleEdit = (formData) => {
     dispatch(updateCandidate(formData));
     setShowEditModal(false);
+    toast.success(`${formData.candidateName}'s record has been updated.`, "Candidate Updated");
   };
 
-  const handleStatusChange = (id, status) => {
+  const handleDelete = () => {
+    const name = selectedCan?.candidateName;
+    dispatch(deleteCandidate(selectedCan?.id));
+    toast.info(`${name} has been removed from the pipeline.`, "Candidate Removed");
+  };
+
+  const handleStatusChange = (id, status, name) => {
     dispatch(updateCandidateStatus({ id, status }));
+    toast.success(`${name} moved to "${status}".`, "Status Updated");
   };
 
   return (
@@ -122,13 +136,13 @@ const Recruitment = () => {
             placeholder="Search by name, position or ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none"
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="All">All Status</option>
           {recruitmentStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -145,15 +159,24 @@ const Recruitment = () => {
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Position</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Applied Date</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Update Status</th>
+                {canEdit && (
+                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Update Status</th>
+                )}
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase text-white">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400">
-                    No candidates found.
+                  <td colSpan={canEdit ? 6 : 5} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-2">
+                      <MdWork size={40} className="text-gray-200" />
+                      <p className="text-gray-400 font-medium text-sm">
+                        {search || filterStatus !== "All"
+                          ? "No candidates match your search."
+                          : "No candidates yet. Add your first candidate."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -161,8 +184,10 @@ const Recruitment = () => {
                   <tr key={can.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: "#1E1E1E" }}>
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: "#1E1E1E" }}
+                        >
                           <span className="text-white font-semibold text-sm">{can.candidateName.charAt(0)}</span>
                         </div>
                         <div>
@@ -174,19 +199,17 @@ const Recruitment = () => {
                     <td className="px-5 py-3.5 text-gray-600">{can.appliedPosition}</td>
                     <td className="px-5 py-3.5 text-gray-600">{can.applicationDate}</td>
                     <td className="px-5 py-3.5"><Badge status={can.status} /></td>
-                    <td className="px-5 py-3.5">
-                      {canEdit ? (
+                    {canEdit && (
+                      <td className="px-5 py-3.5">
                         <select
                           value={can.status}
-                          onChange={(e) => handleStatusChange(can.id, e.target.value)}
-                          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none bg-white"
+                          onChange={(e) => handleStatusChange(can.id, e.target.value, can.candidateName)}
+                          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none bg-white focus:ring-2 focus:ring-green-500"
                         >
                           {recruitmentStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
                         </select>
-                      ) : (
-                        <span className="text-xs text-gray-400">No access</span>
-                      )}
-                    </td>
+                      </td>
+                    )}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1">
                         <button
@@ -230,4 +253,30 @@ const Recruitment = () => {
         <RecruitmentForm onSave={handleAdd} onCancel={() => setShowAddModal(false)} isEdit={false} />
       </Modal>
 
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Candidate" size
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Candidate" size="lg">
+        <RecruitmentForm
+          initial={selectedCan}
+          onSave={handleEdit}
+          onCancel={() => setShowEditModal(false)}
+          isEdit={true}
+        />
+      </Modal>
+
+      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Candidate Details" size="lg">
+        <CandidateDetail candidate={selectedCan} />
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Remove Candidate"
+        message={`Are you sure you want to remove ${selectedCan?.candidateName} from the pipeline? This cannot be undone.`}
+        confirmLabel="Remove"
+        confirmColor="red"
+      />
+    </div>
+  );
+};
+
+export default Recruitment;

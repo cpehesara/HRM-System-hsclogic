@@ -78,7 +78,7 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             value={form.employeeId}
             onChange={handleChange}
             disabled={isEdit}
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
               ${errors.employeeId ? "border-red-400" : "border-gray-200"}
               ${isEdit ? "bg-gray-50 text-gray-500" : ""}`}
           >
@@ -98,7 +98,7 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             name="date"
             value={form.date}
             onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
               ${errors.date ? "border-red-400" : "border-gray-200"}`}
           />
           {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
@@ -112,7 +112,7 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             name="checkIn"
             value={form.checkIn}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
 
@@ -124,7 +124,7 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             name="checkOut"
             value={form.checkOut}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
 
@@ -135,7 +135,7 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
             name="status"
             value={form.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             {attendanceStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -158,7 +158,13 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
         <button onClick={onCancel} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
           Cancel
         </button>
-        <button onClick={handleSubmit} className="px-5 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium">
+        <button
+          onClick={handleSubmit}
+          className="px-5 py-2 text-sm rounded-lg text-white font-medium"
+          style={{ backgroundColor: "#22c55e" }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#16a34a"}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#22c55e"}
+        >
           {isEdit ? "Save Changes" : "Mark Attendance"}
         </button>
       </div>

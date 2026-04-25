@@ -11,12 +11,14 @@ import ConfirmDialog from "../../components/common/ConfirmDialog";
 import Badge from "../../components/common/Badge";
 import EmployeeForm from "./EmployeeForm";
 import EmployeeDetail from "./EmployeeDetail";
+import { useToast } from "../../context/ToastContext";
 import {
-  MdAdd, MdEdit, MdVisibility, MdPersonOff, MdPerson, MdSearch,
+  MdAdd, MdEdit, MdVisibility, MdPersonOff, MdPerson, MdSearch, MdPeople,
 } from "react-icons/md";
 
 const Employees = () => {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { employees } = useSelector((state) => state.employees);
   const { currentUser } = useSelector((state) => state.auth);
 
@@ -53,18 +55,27 @@ const Employees = () => {
   const departments = [...new Set(employees.map((e) => e.department))];
 
   const handleAdd = (formData) => {
-    dispatch(addEmployee({ ...formData, id: generateId() }));
+    const id = generateId();
+    dispatch(addEmployee({ ...formData, id }));
     setShowAddModal(false);
+    toast.success(`${formData.fullName} has been added successfully.`, "Employee Added");
   };
 
   const handleEdit = (formData) => {
     dispatch(updateEmployee(formData));
     setShowEditModal(false);
+    toast.success(`${formData.fullName}'s record has been updated.`, "Employee Updated");
   };
 
   const handleConfirmAction = () => {
-    if (confirmAction === "deactivate") dispatch(deactivateEmployee(selectedEmp.id));
-    if (confirmAction === "activate") dispatch(activateEmployee(selectedEmp.id));
+    if (confirmAction === "deactivate") {
+      dispatch(deactivateEmployee(selectedEmp.id));
+      toast.info(`${selectedEmp.fullName} has been deactivated.`, "Employee Deactivated");
+    }
+    if (confirmAction === "activate") {
+      dispatch(activateEmployee(selectedEmp.id));
+      toast.success(`${selectedEmp.fullName} has been reactivated.`, "Employee Activated");
+    }
   };
 
   return (
@@ -99,14 +110,13 @@ const Employees = () => {
             placeholder="Search by name, ID or designation..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2"
-            style={{ "--tw-ring-color": "#22c55e" }}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none"
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="All">All Status</option>
           <option value="Active">Active</option>
@@ -115,7 +125,7 @@ const Employees = () => {
         <select
           value={filterDept}
           onChange={(e) => setFilterDept(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none"
+          className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="All">All Departments</option>
           {departments.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -139,8 +149,15 @@ const Employees = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400">
-                    No employees found matching your search.
+                  <td colSpan={6} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-2">
+                      <MdPeople size={40} className="text-gray-200" />
+                      <p className="text-gray-400 font-medium text-sm">
+                        {search || filterStatus !== "All" || filterDept !== "All"
+                          ? "No employees match your search."
+                          : "No employees yet. Add your first employee."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -231,7 +248,7 @@ const Employees = () => {
         title={confirmAction === "deactivate" ? "Deactivate Employee" : "Activate Employee"}
         message={
           confirmAction === "deactivate"
-            ? `Are you sure you want to deactivate ${selectedEmp?.fullName}?`
+            ? `Are you sure you want to deactivate ${selectedEmp?.fullName}? They will be marked as inactive.`
             : `Are you sure you want to reactivate ${selectedEmp?.fullName}?`
         }
         confirmLabel={confirmAction === "deactivate" ? "Deactivate" : "Activate"}

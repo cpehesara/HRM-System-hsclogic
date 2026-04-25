@@ -60,7 +60,7 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
           name={name}
           value={form[name]}
           onChange={handleChange}
-          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
             ${errors[name] ? "border-red-400" : "border-gray-200"}`}
         >
           <option value="">Select {label}</option>
@@ -72,7 +72,7 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
           name={name}
           value={form[name]}
           onChange={handleChange}
-          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
             ${errors[name] ? "border-red-400" : "border-gray-200"}`}
         />
       )}
@@ -98,7 +98,7 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
             value={form.eligibleLeaves}
             onChange={handleChange}
             min={0}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
@@ -113,7 +113,10 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
         </button>
         <button
           onClick={handleSubmit}
-          className="px-5 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium"
+          className="px-5 py-2 text-sm rounded-lg text-white font-medium"
+          style={{ backgroundColor: "#22c55e" }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = "#16a34a"}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = "#22c55e"}
         >
           {isEdit ? "Save Changes" : "Add Employee"}
         </button>

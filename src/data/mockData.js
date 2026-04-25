@@ -1,4 +1,8 @@
 
+const today = new Date().toISOString().split("T")[0];
+const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0];
+
 export const mockEmployees = [
   {
     id: "EMP001",
@@ -60,6 +64,30 @@ export const mockEmployees = [
     eligibleLeaves: 21,
     status: "Active",
   },
+  {
+    id: "EMP006",
+    fullName: "Sanduni Jayawardena",
+    designation: "Finance Officer",
+    department: "Finance",
+    dateOfJoining: "2024-02-01",
+    contact: "0741234567",
+    email: "sanduni.jayawardena@hsclogic.com",
+    employmentType: "Full-Time",
+    eligibleLeaves: 14,
+    status: "Active",
+  },
+  {
+    id: "EMP007",
+    fullName: "Chamara Silva",
+    designation: "HR Assistant",
+    department: "Human Resources",
+    dateOfJoining: "2024-07-15",
+    contact: "0731234567",
+    email: "chamara.silva@hsclogic.com",
+    employmentType: "Hourly-Based",
+    eligibleLeaves: 5,
+    status: "Active",
+  },
 ];
 
 export const mockCandidates = [
@@ -82,7 +110,7 @@ export const mockCandidates = [
     appliedPosition: "UI/UX Designer",
     applicationDate: "2026-04-03",
     resumeReference: "tharushi_resume.pdf",
-    remarks: "Good portfolio",
+    remarks: "Good portfolio with Figma skills",
     status: "Applied",
   },
   {
@@ -93,7 +121,7 @@ export const mockCandidates = [
     appliedPosition: "QA Engineer",
     applicationDate: "2026-04-05",
     resumeReference: "malith_resume.pdf",
-    remarks: "3 years experience",
+    remarks: "3 years experience in automated testing",
     status: "Selected",
   },
   {
@@ -107,14 +135,37 @@ export const mockCandidates = [
     remarks: "Fresh graduate",
     status: "Rejected",
   },
+  {
+    id: "CAN005",
+    candidateName: "Lahiru Nanayakkara",
+    contact: "0756667778",
+    email: "lahiru@gmail.com",
+    appliedPosition: "Software Engineer",
+    applicationDate: "2026-04-10",
+    resumeReference: "lahiru_resume.pdf",
+    remarks: "Strong backend skills, Node.js & .NET",
+    status: "Interview Scheduled",
+  },
+  {
+    id: "CAN006",
+    candidateName: "Thisari Senanayake",
+    contact: "0745556667",
+    email: "thisari@gmail.com",
+    appliedPosition: "Finance Officer",
+    applicationDate: "2026-04-15",
+    resumeReference: "thisari_resume.pdf",
+    remarks: "CPA certified, 2 years experience",
+    status: "Shortlisted",
+  },
 ];
 
 export const mockAttendance = [
+  // Today's records
   {
     id: "ATT001",
     employeeId: "EMP001",
     employeeName: "Amal Perera",
-    date: "2026-04-22",
+    date: today,
     checkIn: "08:55",
     checkOut: "17:30",
     status: "Present",
@@ -124,7 +175,7 @@ export const mockAttendance = [
     id: "ATT002",
     employeeId: "EMP002",
     employeeName: "Nimasha Fernando",
-    date: "2026-04-22",
+    date: today,
     checkIn: "09:20",
     checkOut: "17:00",
     status: "Late",
@@ -134,7 +185,7 @@ export const mockAttendance = [
     id: "ATT003",
     employeeId: "EMP003",
     employeeName: "Kasun Rajapaksa",
-    date: "2026-04-22",
+    date: today,
     checkIn: "",
     checkOut: "",
     status: "Absent",
@@ -144,7 +195,7 @@ export const mockAttendance = [
     id: "ATT004",
     employeeId: "EMP005",
     employeeName: "Ruwan Bandara",
-    date: "2026-04-22",
+    date: today,
     checkIn: "09:00",
     checkOut: "13:00",
     status: "Half Day",
@@ -152,23 +203,85 @@ export const mockAttendance = [
   },
   {
     id: "ATT005",
+    employeeId: "EMP006",
+    employeeName: "Sanduni Jayawardena",
+    date: today,
+    checkIn: "08:45",
+    checkOut: "17:15",
+    status: "Present",
+    totalHours: 8.5,
+  },
+  {
+    id: "ATT006",
+    employeeId: "EMP007",
+    employeeName: "Chamara Silva",
+    date: today,
+    checkIn: "10:00",
+    checkOut: "",
+    status: "Present",
+    totalHours: 0,
+  },
+  // Yesterday's records
+  {
+    id: "ATT007",
     employeeId: "EMP001",
     employeeName: "Amal Perera",
-    date: "2026-04-21",
+    date: yesterday,
     checkIn: "08:50",
     checkOut: "17:15",
     status: "Present",
     totalHours: 8.42,
   },
   {
-    id: "ATT006",
+    id: "ATT008",
     employeeId: "EMP002",
     employeeName: "Nimasha Fernando",
-    date: "2026-04-21",
+    date: yesterday,
     checkIn: "",
     checkOut: "",
     status: "Leave",
     totalHours: 0,
+  },
+  {
+    id: "ATT009",
+    employeeId: "EMP005",
+    employeeName: "Ruwan Bandara",
+    date: yesterday,
+    checkIn: "09:05",
+    checkOut: "18:00",
+    status: "Present",
+    totalHours: 8.92,
+  },
+  {
+    id: "ATT010",
+    employeeId: "EMP006",
+    employeeName: "Sanduni Jayawardena",
+    date: yesterday,
+    checkIn: "09:15",
+    checkOut: "17:30",
+    status: "Late",
+    totalHours: 8.25,
+  },
+  // Two days ago
+  {
+    id: "ATT011",
+    employeeId: "EMP001",
+    employeeName: "Amal Perera",
+    date: twoDaysAgo,
+    checkIn: "08:58",
+    checkOut: "17:20",
+    status: "Present",
+    totalHours: 8.37,
+  },
+  {
+    id: "ATT012",
+    employeeId: "EMP003",
+    employeeName: "Kasun Rajapaksa",
+    date: twoDaysAgo,
+    checkIn: "09:00",
+    checkOut: "13:00",
+    status: "Half Day",
+    totalHours: 4.0,
   },
 ];
 

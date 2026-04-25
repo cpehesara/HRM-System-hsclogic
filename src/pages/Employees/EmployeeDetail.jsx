@@ -4,7 +4,7 @@ import { MdPerson, MdEmail, MdPhone, MdCalendarToday, MdWork, MdBusiness } from 
 
 const Row = ({ icon, label, value }) => (
   <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
-    <div className="text-blue-500 mt-0.5">{icon}</div>
+    <div className="mt-0.5" style={{ color: "#22c55e" }}>{icon}</div>
     <div>
       <p className="text-xs text-gray-400 font-medium">{label}</p>
       <p className="text-sm text-gray-800 font-medium mt-0.5">{value || "—"}</p>
@@ -18,7 +18,8 @@ const EmployeeDetail = ({ employee }) => {
     <div>
       {/* Avatar + name header */}
       <div className="flex items-center gap-4 mb-6 pb-5 border-b border-gray-100">
-        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+          style={{ backgroundColor: "#1E1E1E" }}>
           {employee.fullName.charAt(0)}
         </div>
         <div>
