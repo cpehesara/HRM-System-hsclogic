@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { attendanceStatuses } from "../../data/mockData";
@@ -12,7 +11,6 @@ const emptyForm = {
   status: "Present",
 };
 
-// Calculate hours between two time strings
 const calcHours = (checkIn, checkOut) => {
   if (!checkIn || !checkOut) return 0;
   const [inH, inM] = checkIn.split(":").map(Number);
@@ -25,8 +23,6 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const { employees } = useSelector((state) => state.employees);
-
-  // Only active employees can have attendance
   const activeEmployees = employees.filter((e) => e.status === "Active");
 
   useEffect(() => {
@@ -35,8 +31,6 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // When employee is selected, auto-fill employee name
     if (name === "employeeId") {
       const emp = employees.find((e) => e.id === value);
       setForm((prev) => ({
@@ -79,15 +73,15 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
 
         {/* Employee selector */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Employee *</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Employee *</label>
           <select
             name="employeeId"
             value={form.employeeId}
             onChange={handleChange}
             disabled={isEdit}
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
-              ${errors.employeeId ? "border-red-400" : "border-gray-200"}
-              ${isEdit ? "bg-gray-50 text-gray-500" : ""}`}
+            className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white
+              ${errors.employeeId ? "border-red-400 bg-red-50" : "border-gray-200"}
+              ${isEdit ? "opacity-60" : ""}`}
           >
             <option value="">Select Employee</option>
             {activeEmployees.map((e) => (
@@ -99,61 +93,61 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
 
         {/* Date */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Date *</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Date *</label>
           <input
             type="date"
             name="date"
             value={form.date}
             onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
-              ${errors.date ? "border-red-400" : "border-gray-200"}`}
+            className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500
+              ${errors.date ? "border-red-400 bg-red-50" : "border-gray-200"}`}
           />
           {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
         </div>
 
         {/* Check In */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Check-In Time</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Check-In Time</label>
           <input
             type="time"
             name="checkIn"
             value={form.checkIn}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
 
         {/* Check Out */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Check-Out Time</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Check-Out Time</label>
           <input
             type="time"
             name="checkOut"
             value={form.checkOut}
             onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
-              ${errors.checkOut ? "border-red-400" : "border-gray-200"}`}
+            className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500
+              ${errors.checkOut ? "border-red-400 bg-red-50" : "border-gray-200"}`}
           />
           {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>}
         </div>
 
         {/* Status */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Status *</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Status *</label>
           <select
             name="status"
             value={form.status}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
           >
             {attendanceStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
 
-        {/* Auto-calculated hours display */}
+        {/* Auto-calculated hours */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Calculated Work Hours</label>
-          <div className={`w-full px-3 py-2 text-sm border rounded-lg font-semibold
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Calculated Work Hours</label>
+          <div className={`w-full px-3 py-2.5 text-sm border rounded-xl font-semibold
             ${workedHours > 0 ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400"}`}>
             {workedHours > 0 ? `${workedHours} hrs` : "—"}
           </div>
@@ -163,13 +157,16 @@ const AttendanceForm = ({ initial, onSave, onCancel, isEdit }) => {
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <button onClick={onCancel} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+        <button
+          onClick={onCancel}
+          className="w-full sm:w-auto px-4 py-2.5 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 tap-target"
+        >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          className="px-5 py-2 text-sm rounded-lg text-white font-medium"
+          className="w-full sm:w-auto px-5 py-2.5 text-sm rounded-xl text-white font-semibold tap-target"
           style={{ backgroundColor: "#22c55e" }}
           onMouseEnter={e => e.currentTarget.style.backgroundColor = "#16a34a"}
           onMouseLeave={e => e.currentTarget.style.backgroundColor = "#22c55e"}

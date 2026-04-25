@@ -1,19 +1,87 @@
 @import "tailwindcss";
 
+/* ── Base ────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+/* ── Safe-area helpers (notch / home-indicator) ───────────────────── */
+.pb-safe   { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe   { padding-top:    env(safe-area-inset-top,    0px); }
+.pl-safe   { padding-left:   env(safe-area-inset-left,   0px); }
+.pr-safe   { padding-right:  env(safe-area-inset-right,  0px); }
+.mb-safe   { margin-bottom:  env(safe-area-inset-bottom, 0px); }
+
+/* ── Scrollbars ──────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 5px; height: 5px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #d1d5db; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ── Toast animations ────────────────────────────────────────────── */
 @keyframes slide-in {
   from { transform: translateX(110%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
-
+@keyframes slide-in-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 @keyframes shrink {
   from { width: 100%; }
   to   { width: 0%; }
 }
 
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out forwards;
+.animate-slide-in    { animation: slide-in    0.3s ease-out forwards; }
+.animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
+.animate-shrink      { animation: shrink      3.5s linear  forwards; }
+
+/* ── Modal slide-up on mobile ────────────────────────────────────── */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-sheet-up { animation: sheet-up 0.28s cubic-bezier(0.32,0.72,0,1) forwards; }
+
+/* ── Touch-friendly minimum tap size ─────────────────────────────── */
+.tap-target {
+  min-height: 44px;
+  min-width:  44px;
 }
 
-.animate-shrink {
-  animation: shrink 3.5s linear forwards;
+/* ── Prevent iOS input zoom (font-size must be ≥16 px) ───────────── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 14px;
+  }
 }

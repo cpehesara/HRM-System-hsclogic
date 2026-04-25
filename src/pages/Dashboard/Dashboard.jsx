@@ -7,56 +7,70 @@ import {
   MdCalendarToday, MdFilterList, MdArrowForward,
 } from "react-icons/md";
 
-/* ── Shared sub-components ─────────────────────────────────────────── */
+/* ── Shared sub-components ────────────────────────────────────────── */
 
 const StatCard = ({ title, value, subtitle, icon, color, bg }) => (
-  <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-start justify-between">
-    <div>
-      <p className="text-sm text-gray-500 font-medium">{title}</p>
-      <p className={`text-3xl font-bold mt-1 ${color}`}>{value}</p>
-      {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+  <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100
+                  flex items-start justify-between gap-3">
+    <div className="min-w-0">
+      <p className="text-xs sm:text-sm text-gray-500 font-medium leading-tight">{title}</p>
+      <p className={`text-2xl sm:text-3xl font-bold mt-1 ${color}`}>{value}</p>
+      {subtitle && (
+        <p className="text-xs text-gray-400 mt-1 hidden sm:block">{subtitle}</p>
+      )}
     </div>
-    <div className={`${bg} p-3 rounded-xl`}>{icon}</div>
+    <div className={`${bg} p-2.5 sm:p-3 rounded-xl shrink-0`}>{icon}</div>
   </div>
 );
 
 const Badge = ({ status }) => {
   const colors = {
-    Active: "bg-green-100 text-green-700",
-    Inactive: "bg-red-100 text-red-700",
-    Present: "bg-green-100 text-green-700",
-    Absent: "bg-red-100 text-red-700",
-    Late: "bg-yellow-100 text-yellow-700",
-    "Half Day": "bg-orange-100 text-orange-700",
-    Leave: "bg-blue-100 text-blue-700",
-    Applied: "bg-gray-100 text-gray-700",
-    Shortlisted: "bg-blue-100 text-blue-700",
-    Selected: "bg-green-100 text-green-700",
-    Rejected: "bg-red-100 text-red-700",
-    "Interview Scheduled": "bg-purple-100 text-purple-700",
+    Active:               "bg-green-100 text-green-700",
+    Inactive:             "bg-red-100 text-red-700",
+    Present:              "bg-green-100 text-green-700",
+    Absent:               "bg-red-100 text-red-700",
+    Late:                 "bg-yellow-100 text-yellow-700",
+    "Half Day":           "bg-orange-100 text-orange-700",
+    Leave:                "bg-blue-100 text-blue-700",
+    Applied:              "bg-gray-100 text-gray-700",
+    Shortlisted:          "bg-blue-100 text-blue-700",
+    Selected:             "bg-green-100 text-green-700",
+    Rejected:             "bg-red-100 text-red-700",
+    "Interview Scheduled":"bg-purple-100 text-purple-700",
   };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0
+                      ${colors[status] ?? "bg-gray-100 text-gray-600"}`}>
       {status}
     </span>
   );
 };
 
+/* ── Activity feed card ───────────────────────────────────────────── */
+const ActivityCard = ({ title, icon, items, renderItem, emptyMsg }) => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+    <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+      {icon}
+      {title}
+    </h4>
+    {items.length === 0
+      ? <p className="text-xs text-gray-400 text-center py-6">{emptyMsg}</p>
+      : <div className="space-y-0 divide-y divide-gray-50">{items.map(renderItem)}</div>
+    }
+  </div>
+);
+
 /* ─────────────────────────────────────────────────────────────────── */
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { employees } = useSelector((s) => s.employees);
+  const { employees }  = useSelector((s) => s.employees);
   const { candidates } = useSelector((s) => s.recruitment);
-  const { records } = useSelector((s) => s.attendance);
-  const { currentUser } = useSelector((s) => s.auth);
+  const { records }    = useSelector((s) => s.attendance);
+  const { currentUser }= useSelector((s) => s.auth);
 
-  const role = currentUser?.role; // "Admin" | "HR Staff" | "Management"
-  const isAdmin    = role === "Admin";
-  const isHR       = role === "HR Staff";
-  const isMgmt     = role === "Management";
-  // Both Admin and HR Staff can manage; Management is view-only (FRS §6)
-  const canManage  = isAdmin || isHR;
+  const role      = currentUser?.role;
+  const canManage = role === "Admin" || role === "HR Staff";
 
   const [timePeriod, setTimePeriod] = useState("daily");
   const today = new Date().toISOString().split("T")[0];
@@ -66,86 +80,88 @@ const Dashboard = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
   };
 
-  /* Attendance filtered by selected period (FRS §2.2 Data Filtering) */
   const filteredAttendance = useMemo(() => {
     if (timePeriod === "daily") return records.filter((r) => r.date === today);
-    const monthStart = getMonthStart();
-    return records.filter((r) => r.date >= monthStart && r.date <= today);
+    const ms = getMonthStart();
+    return records.filter((r) => r.date >= ms && r.date <= today);
   }, [records, timePeriod, today]);
 
-  /* ── Employee summary (FRS §2.2) ── */
-  const totalEmployees    = employees.length;
-  const activeEmployees   = employees.filter((e) => e.status === "Active").length;
-  const inactiveEmployees = employees.filter((e) => e.status === "Inactive").length;
+  /* Stats */
+  const totalEmp    = employees.length;
+  const activeEmp   = employees.filter((e) => e.status === "Active").length;
+  const inactiveEmp = employees.filter((e) => e.status === "Inactive").length;
 
-  /* ── Recruitment summary (FRS §2.2) ── */
-  const totalCandidates = candidates.length;
-  const shortlisted     = candidates.filter((c) => c.status === "Shortlisted").length;
-  const selected        = candidates.filter((c) => c.status === "Selected").length;
+  const totalCand   = candidates.length;
+  const shortlisted = candidates.filter((c) => c.status === "Shortlisted").length;
+  const selected    = candidates.filter((c) => c.status === "Selected").length;
 
-  /* ── Attendance summary (FRS §2.2) ── */
-  const presentCount = filteredAttendance.filter((r) => r.status === "Present").length;
-  const absentCount  = filteredAttendance.filter((r) => r.status === "Absent").length;
-  const lateCount    = filteredAttendance.filter((r) => r.status === "Late").length;
-  const totalHours   = filteredAttendance.reduce((sum, r) => sum + r.totalHours, 0);
+  const presentCt   = filteredAttendance.filter((r) => r.status === "Present").length;
+  const absentCt    = filteredAttendance.filter((r) => r.status === "Absent").length;
+  const lateCt      = filteredAttendance.filter((r) => r.status === "Late").length;
+  const totalHrs    = filteredAttendance.reduce((s, r) => s + r.totalHours, 0);
 
-  /* ── Activity feeds (FRS §2.2 Activity Overview) ── */
-  const recentEmployees  = [...employees].slice(-3).reverse();
-  const recentCandidates = [...candidates].slice(-3).reverse();
-  const recentAttendance = [...records]
-    .sort((a, b) => ((b.date + b.checkIn) > (a.date + a.checkIn) ? 1 : -1))
+  /* Activity feeds */
+  const recentEmps  = [...employees].slice(-3).reverse();
+  const recentCands = [...candidates].slice(-3).reverse();
+  const recentAtts  = [...records]
+    .sort((a, b) => (b.date + b.checkIn) > (a.date + a.checkIn) ? 1 : -1)
     .slice(0, 4);
 
-  /* ── Navigation quick-links (FRS §2.2 Navigation Support) ── */
+  /* Navigation quick-links (FRS §2.2) */
   const navCards = [
     {
       label: "Employee Management",
-      desc: canManage ? "Add, edit and manage employee records" : "View employee records and summaries",
-      icon: <MdPeople size={24} />,
-      path: "/employees",
-      color: "#22c55e",
-      bg: "#dcfce7",
+      desc:  canManage ? "Add, edit and manage employee records" : "View employee summaries",
+      icon:  <MdPeople size={22} />, path: "/employees",
+      color: "#22c55e", bg: "#dcfce7",
     },
     {
-      label: "Recruitment Management",
-      desc: canManage ? "Track candidates through the hiring pipeline" : "Monitor recruitment data and pipeline",
-      icon: <MdWork size={24} />,
-      path: "/recruitment",
-      color: "#7c3aed",
-      bg: "#ede9fe",
+      label: "Recruitment",
+      desc:  canManage ? "Track candidates through the hiring pipeline" : "Monitor recruitment data",
+      icon:  <MdWork size={22} />, path: "/recruitment",
+      color: "#7c3aed", bg: "#ede9fe",
     },
     {
-      label: "Attendance Management",
-      desc: canManage ? "Mark and manage employee attendance" : "View attendance reports and records",
-      icon: <MdAccessTime size={24} />,
-      path: "/attendance",
-      color: "#2563eb",
-      bg: "#dbeafe",
+      label: "Attendance",
+      desc:  canManage ? "Mark and manage employee attendance" : "View attendance reports",
+      icon:  <MdAccessTime size={22} />, path: "/attendance",
+      color: "#2563eb", bg: "#dbeafe",
     },
   ];
 
-  return (
-    <div className="space-y-6">
+  /* Avatar helper */
+  const Avatar = ({ letter }) => (
+    <div
+      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0"
+      style={{ backgroundColor: "#1E1E1E" }}
+    >
+      <span className="text-white font-semibold text-xs sm:text-sm">{letter}</span>
+    </div>
+  );
 
-      {/* ── Welcome Banner + Period Filter ── */}
+  return (
+    <div className="space-y-5 sm:space-y-6">
+
+      {/* ── Welcome banner + period filter ── */}
       <div
-        className="rounded-xl p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        style={{ background: "linear-gradient(135deg, #1E1E1E 0%, #2d2d2d 100%)" }}
+        className="rounded-xl p-4 sm:p-6 text-white flex flex-col sm:flex-row
+                   sm:items-center sm:justify-between gap-4"
+        style={{ background: "linear-gradient(135deg,#1E1E1E 0%,#2d2d2d 100%)" }}
       >
         <div>
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-xl sm:text-2xl font-bold leading-tight">
             Welcome back, {currentUser?.name?.split(" ")[0]}
           </h2>
-          <p className="mt-1 text-sm" style={{ color: "#22c55e" }}>
+          <p className="mt-1 text-xs sm:text-sm" style={{ color: "#22c55e" }}>
             {new Date().toLocaleDateString("en-US", {
-              weekday: "long", year: "numeric", month: "long", day: "numeric",
+              weekday:"long", year:"numeric", month:"long", day:"numeric",
             })}
           </p>
-          {/* Role badge */}
           <span
             className="mt-2 inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full"
             style={{
-              backgroundColor: isAdmin ? "#22c55e" : isHR ? "#3b82f6" : "#a855f7",
+              backgroundColor:
+                role === "Admin" ? "#22c55e" : role === "HR Staff" ? "#3b82f6" : "#a855f7",
               color: "#fff",
             }}
           >
@@ -153,18 +169,17 @@ const Dashboard = () => {
           </span>
         </div>
 
-        {/* Time Period Filter — FRS §2.2 Data Filtering */}
-        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 self-start sm:self-auto">
-          <MdFilterList size={16} className="text-gray-300" />
+        {/* Daily / Monthly filter — FRS §2.2 */}
+        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 self-start">
+          <MdFilterList size={15} className="text-gray-300 shrink-0" />
           <span className="text-xs text-gray-300 font-medium">View:</span>
           <div className="flex rounded-md overflow-hidden border border-white/20">
-            {["daily", "monthly"].map((p) => (
+            {["daily","monthly"].map((p) => (
               <button
                 key={p}
                 onClick={() => setTimePeriod(p)}
-                className={`px-3 py-1 text-xs font-semibold capitalize transition-colors ${
-                  timePeriod === p ? "text-white" : "text-gray-400 hover:text-white"
-                }`}
+                className={`px-3 py-1 text-xs font-semibold transition-colors
+                  ${timePeriod === p ? "text-white" : "text-gray-400 hover:text-white"}`}
                 style={timePeriod === p ? { backgroundColor: "#22c55e" } : {}}
               >
                 {p === "daily" ? "Daily" : "Monthly"}
@@ -174,248 +189,144 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ── Navigation Support (FRS §2.2) ── */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      {/* ── Navigation quick-links — FRS §2.2 ── */}
+      <section aria-label="Quick navigation">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Quick Navigation
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {navCards.map((card) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          {navCards.map((c) => (
             <button
-              key={card.path}
-              onClick={() => navigate(card.path)}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 text-left hover:shadow-md transition-shadow group"
+              key={c.path}
+              onClick={() => navigate(c.path)}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5
+                         text-left hover:shadow-md active:scale-[.98] transition group tap-target"
             >
               <div className="flex items-start justify-between mb-3">
-                <div
-                  className="p-2.5 rounded-xl"
-                  style={{ backgroundColor: card.bg, color: card.color }}
-                >
-                  {card.icon}
+                <div className="p-2.5 rounded-xl shrink-0"
+                  style={{ backgroundColor: c.bg, color: c.color }}>
+                  {c.icon}
                 </div>
                 <MdArrowForward
-                  size={18}
-                  className="text-gray-300 group-hover:text-gray-500 transition-colors mt-1"
+                  size={17}
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors mt-0.5"
                 />
               </div>
-              <p className="text-sm font-semibold text-gray-800">{card.label}</p>
-              <p className="text-xs text-gray-400 mt-1">{card.desc}</p>
+              <p className="text-sm font-semibold text-gray-800">{c.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5 leading-snug">{c.desc}</p>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ── Employee Summary (FRS §2.2) — All roles see this ── */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      {/* ── Employee summary — FRS §2.2 ── */}
+      <section aria-label="Employee summary">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Employee Summary
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            title="Total Employees"
-            value={totalEmployees}
-            subtitle="All registered employees"
-            icon={<MdPeople size={22} className="text-green-600" />}
-            color="text-green-600"
-            bg="bg-green-50"
-          />
-          <StatCard
-            title="Active Employees"
-            value={activeEmployees}
-            subtitle="Currently working"
-            icon={<MdCheckCircle size={22} className="text-green-600" />}
-            color="text-green-600"
-            bg="bg-green-50"
-          />
-          <StatCard
-            title="Inactive Employees"
-            value={inactiveEmployees}
-            subtitle="Deactivated records"
-            icon={<MdCancel size={22} className="text-red-500" />}
-            color="text-red-500"
-            bg="bg-red-50"
-          />
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <StatCard title="Total"    value={totalEmp}    icon={<MdPeople size={20} className="text-green-600"/>}     color="text-green-600" bg="bg-green-50"  />
+          <StatCard title="Active"   value={activeEmp}   icon={<MdCheckCircle size={20} className="text-green-600"/>} color="text-green-600" bg="bg-green-50"  />
+          <StatCard title="Inactive" value={inactiveEmp} icon={<MdCancel size={20} className="text-red-500"/>}        color="text-red-500"   bg="bg-red-50"    />
         </div>
-      </div>
+      </section>
 
-      {/* ── Recruitment Summary (FRS §2.2) — All roles see this ── */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      {/* ── Recruitment summary — FRS §2.2 ── */}
+      <section aria-label="Recruitment summary">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Recruitment Summary
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            title="Total Applicants"
-            value={totalCandidates}
-            subtitle="All applications received"
-            icon={<MdPersonAdd size={22} className="text-gray-700" />}
-            color="text-gray-800"
-            bg="bg-gray-100"
-          />
-          <StatCard
-            title="Shortlisted"
-            value={shortlisted}
-            subtitle="Moved to next stage"
-            icon={<MdTrendingUp size={22} className="text-yellow-600" />}
-            color="text-yellow-600"
-            bg="bg-yellow-50"
-          />
-          <StatCard
-            title="Selected"
-            value={selected}
-            subtitle="Offer extended"
-            icon={<MdWork size={22} className="text-green-600" />}
-            color="text-green-600"
-            bg="bg-green-50"
-          />
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <StatCard title="Applicants"  value={totalCand}   icon={<MdPersonAdd size={20} className="text-gray-700"/>}    color="text-gray-800"  bg="bg-gray-100"  />
+          <StatCard title="Shortlisted" value={shortlisted}  icon={<MdTrendingUp size={20} className="text-yellow-600"/>} color="text-yellow-600" bg="bg-yellow-50" />
+          <StatCard title="Selected"    value={selected}     icon={<MdWork size={20} className="text-green-600"/>}         color="text-green-600"  bg="bg-green-50"  />
         </div>
-      </div>
+      </section>
 
-      {/* ── Attendance Summary (FRS §2.2) — All roles see this ── */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+      {/* ── Attendance summary — FRS §2.2 ── */}
+      <section aria-label="Attendance summary">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2 flex-wrap">
           Attendance Summary
           <span className="text-xs font-normal text-gray-400 normal-case">
             — {timePeriod === "daily" ? "Today" : "This Month"}
           </span>
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard
-            title="Present"
-            value={presentCount}
-            icon={<MdCheckCircle size={22} className="text-green-600" />}
-            color="text-green-600"
-            bg="bg-green-50"
-          />
-          <StatCard
-            title="Absent"
-            value={absentCount}
-            icon={<MdCancel size={22} className="text-red-500" />}
-            color="text-red-500"
-            bg="bg-red-50"
-          />
-          <StatCard
-            title="Late Entries"
-            value={lateCount}
-            icon={<MdSchedule size={22} className="text-yellow-600" />}
-            color="text-yellow-600"
-            bg="bg-yellow-50"
-          />
-          <StatCard
-            title="Total Hours"
-            value={totalHours.toFixed(1)}
-            subtitle="Combined work hours"
-            icon={<MdAccessTime size={22} className="text-gray-700" />}
-            color="text-gray-800"
-            bg="bg-gray-100"
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+          <StatCard title="Present"     value={presentCt}            icon={<MdCheckCircle size={20} className="text-green-600"/>} color="text-green-600"  bg="bg-green-50"  />
+          <StatCard title="Absent"      value={absentCt}             icon={<MdCancel size={20} className="text-red-500"/>}        color="text-red-500"    bg="bg-red-50"    />
+          <StatCard title="Late"        value={lateCt}               icon={<MdSchedule size={20} className="text-yellow-600"/>}   color="text-yellow-600" bg="bg-yellow-50" />
+          <StatCard title="Total Hrs"   value={totalHrs.toFixed(1)}  icon={<MdAccessTime size={20} className="text-gray-700"/>}   color="text-gray-800"   bg="bg-gray-100"  />
         </div>
-      </div>
+      </section>
 
-      {/* ── Activity Overview (FRS §2.2) ── */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      {/* ── Activity overview — FRS §2.2 ── */}
+      <section aria-label="Activity overview">
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Activity Overview
         </h3>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
-          {/* Recently Added Employees (FRS §2.2 — recently added employees) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <MdPeople style={{ color: "#22c55e" }} size={18} />
-              Recently Added Employees
-            </h4>
-            {recentEmployees.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">No employees yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentEmployees.map((emp) => (
-                  <div key={emp.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: "#1E1E1E" }}
-                      >
-                        <span className="text-white font-semibold text-sm">{emp.fullName.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{emp.fullName}</p>
-                        <p className="text-xs text-gray-400">{emp.designation} · {emp.department}</p>
-                      </div>
-                    </div>
-                    <Badge status={emp.status} />
+          <ActivityCard
+            title="Recently Added Employees"
+            icon={<MdPeople style={{ color:"#22c55e" }} size={17} />}
+            items={recentEmps}
+            emptyMsg="No employees yet."
+            renderItem={(emp) => (
+              <div key={emp.id} className="flex items-center justify-between py-2.5 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar letter={emp.fullName.charAt(0)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{emp.fullName}</p>
+                    <p className="text-xs text-gray-400 truncate">{emp.designation} · {emp.department}</p>
                   </div>
-                ))}
+                </div>
+                <Badge status={emp.status} />
               </div>
             )}
-          </div>
+          />
 
-          {/* Recent Recruitment Updates (FRS §2.2 — recent recruitment updates) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <MdWork style={{ color: "#22c55e" }} size={18} />
-              Recent Recruitment Updates
-            </h4>
-            {recentCandidates.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">No candidates yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentCandidates.map((can) => (
-                  <div key={can.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: "#1E1E1E" }}
-                      >
-                        <span className="text-white font-semibold text-sm">{can.candidateName.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{can.candidateName}</p>
-                        <p className="text-xs text-gray-400">{can.appliedPosition} · {can.applicationDate}</p>
-                      </div>
-                    </div>
-                    <Badge status={can.status} />
+          <ActivityCard
+            title="Recent Recruitment Updates"
+            icon={<MdWork style={{ color:"#22c55e" }} size={17} />}
+            items={recentCands}
+            emptyMsg="No candidates yet."
+            renderItem={(can) => (
+              <div key={can.id} className="flex items-center justify-between py-2.5 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar letter={can.candidateName.charAt(0)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{can.candidateName}</p>
+                    <p className="text-xs text-gray-400 truncate">{can.appliedPosition} · {can.applicationDate}</p>
                   </div>
-                ))}
+                </div>
+                <Badge status={can.status} />
               </div>
             )}
-          </div>
+          />
 
-          {/* Recent Attendance Records (FRS §2.2 — recent attendance records) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <MdCalendarToday style={{ color: "#22c55e" }} size={18} />
-              Recent Attendance Records
-            </h4>
-            {recentAttendance.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">No attendance records yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentAttendance.map((rec) => (
-                  <div key={rec.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: "#1E1E1E" }}
-                      >
-                        <span className="text-white font-semibold text-sm">{rec.employeeName.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{rec.employeeName}</p>
-                        <p className="text-xs text-gray-400">
-                          {rec.date}{rec.checkIn ? ` · In: ${rec.checkIn}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge status={rec.status} />
+          <ActivityCard
+            title="Recent Attendance Records"
+            icon={<MdCalendarToday style={{ color:"#22c55e" }} size={17} />}
+            items={recentAtts}
+            emptyMsg="No attendance records yet."
+            renderItem={(rec) => (
+              <div key={rec.id} className="flex items-center justify-between py-2.5 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar letter={rec.employeeName.charAt(0)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{rec.employeeName}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {rec.date}{rec.checkIn ? ` · In: ${rec.checkIn}` : ""}
+                    </p>
                   </div>
-                ))}
+                </div>
+                <Badge status={rec.status} />
               </div>
             )}
-          </div>
+          />
 
         </div>
-      </div>
+      </section>
 
     </div>
   );

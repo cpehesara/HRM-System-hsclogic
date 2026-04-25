@@ -1,43 +1,42 @@
-
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import BottomNav from "./BottomNav";
 
-// Maps URL paths to page titles
 const pageTitles = {
-  "/": "Dashboard",
-  "/employees": "Employee Management",
-  "/recruitment": "Recruitment Management",
+  "/":           "Dashboard",
+  "/employees":  "Employee Management",
+  "/recruitment":"Recruitment Management",
   "/attendance": "Attendance Management",
 };
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
+  const location  = useLocation();
   const pageTitle = pageTitles[location.pathname] || "HSClogic HRMS";
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <Header
-          onMenuClick={() => setSidebarOpen(true)}
-          pageTitle={pageTitle}
-        />
+      {/* Sidebar — hidden on mobile, static on lg+ */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Page Content — each page renders here */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Outlet />
+      {/* Right column */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        <Header onMenuClick={() => setSidebarOpen(true)} pageTitle={pageTitle} />
+
+        {/* Scrollable page area — extra bottom padding on mobile for BottomNav */}
+        <main className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-4 py-4 md:px-6 md:py-6 pb-24 lg:pb-6 max-w-screen-xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
+
+      {/* Bottom navigation bar — mobile only (lg: hidden) */}
+      <BottomNav />
     </div>
   );
 };

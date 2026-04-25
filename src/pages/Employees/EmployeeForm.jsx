@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { departments, designations } from "../../data/mockData";
 
@@ -18,7 +17,6 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
-  // If editing, pre-fill the form with existing data
   useEffect(() => {
     if (initial) setForm(initial);
   }, [initial]);
@@ -26,7 +24,6 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -44,24 +41,20 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
 
   const handleSubmit = () => {
     const newErrors = validate();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     onSave(form);
   };
 
-  // Reusable input field
   const Field = ({ label, name, type = "text", options }) => (
     <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-gray-600 mb-1.5">{label}</label>
       {options ? (
         <select
           name={name}
           value={form[name]}
           onChange={handleChange}
-          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
-            ${errors[name] ? "border-red-400" : "border-gray-200"}`}
+          className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white
+            ${errors[name] ? "border-red-400 bg-red-50" : "border-gray-200"}`}
         >
           <option value="">Select {label}</option>
           {options.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -72,8 +65,8 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
           name={name}
           value={form[name]}
           onChange={handleChange}
-          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500
-            ${errors[name] ? "border-red-400" : "border-gray-200"}`}
+          className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500
+            ${errors[name] ? "border-red-400 bg-red-50" : "border-gray-200"}`}
         />
       )}
       {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
@@ -91,29 +84,28 @@ const EmployeeForm = ({ initial, onSave, onCancel, isEdit }) => {
         <Field label="Department *" name="department" options={departments} />
         <Field label="Employment Type" name="employmentType" options={["Full-Time", "Part-Time", "Hourly-Based"]} />
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Eligible Leaves</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1.5">Eligible Leaves</label>
           <input
             type="number"
             name="eligibleLeaves"
             value={form.eligibleLeaves}
             onChange={handleChange}
             min={0}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
         <button
           onClick={onCancel}
-          className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+          className="w-full sm:w-auto px-4 py-2.5 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 tap-target"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          className="px-5 py-2 text-sm rounded-lg text-white font-medium"
+          className="w-full sm:w-auto px-5 py-2.5 text-sm rounded-xl text-white font-semibold tap-target"
           style={{ backgroundColor: "#22c55e" }}
           onMouseEnter={e => e.currentTarget.style.backgroundColor = "#16a34a"}
           onMouseLeave={e => e.currentTarget.style.backgroundColor = "#22c55e"}

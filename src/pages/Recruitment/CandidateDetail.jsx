@@ -1,13 +1,12 @@
-
 import Badge from "../../components/common/Badge";
 import { MdPerson, MdEmail, MdPhone, MdWork, MdCalendarToday, MdDescription, MdNotes } from "react-icons/md";
 
 const Row = ({ icon, label, value }) => (
   <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
-    <div className="mt-0.5" style={{ color: "#22c55e" }}>{icon}</div>
-    <div>
+    <div className="mt-0.5 shrink-0" style={{ color: "#22c55e" }}>{icon}</div>
+    <div className="min-w-0">
       <p className="text-xs text-gray-400 font-medium">{label}</p>
-      <p className="text-sm text-gray-800 font-medium mt-0.5">{value || "—"}</p>
+      <div className="text-sm text-gray-800 font-medium mt-0.5 wrap-break-word">{value || "—"}</div>
     </div>
   </div>
 );
@@ -16,15 +15,17 @@ const CandidateDetail = ({ candidate }) => {
   if (!candidate) return null;
   return (
     <div>
-      <div className="flex items-center gap-4 mb-6 pb-5 border-b border-gray-100">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
-          style={{ backgroundColor: "#1E1E1E" }}>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 pb-5 border-b border-gray-100">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shrink-0"
+          style={{ backgroundColor: "#1E1E1E" }}
+        >
           {candidate.candidateName.charAt(0)}
         </div>
-        <div>
-          <h3 className="text-xl font-bold text-gray-800">{candidate.candidateName}</h3>
-          <p className="text-sm text-gray-500">{candidate.appliedPosition}</p>
-          <div className="mt-1">
+        <div className="min-w-0">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{candidate.candidateName}</h3>
+          <p className="text-sm text-gray-500 truncate">{candidate.appliedPosition}</p>
+          <div className="mt-1.5">
             <Badge status={candidate.status} />
           </div>
         </div>
